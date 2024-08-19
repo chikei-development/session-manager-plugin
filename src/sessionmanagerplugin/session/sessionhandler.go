@@ -88,7 +88,12 @@ func (s *Session) ProcessFirstMessage(log log.T, outputMessage message.ClientMes
 
 // Stop will end the session
 func (s *Session) Stop() {
-	os.Exit(0)
+	// end the sub session
+	sess,ok := SessionRegistry[s.SessionType]
+	if !ok{
+		return	
+	}
+	sess.Stop()
 }
 
 // GetResumeSessionParams calls ResumeSession API and gets tokenvalue for reconnecting
