@@ -106,7 +106,9 @@ func (s *PortSession) Initialize(log log.T, sessionVar *session.Session) {
 }
 
 func (s *PortSession) Stop() {
-	s.portSessionType.Stop()
+	// 🤔
+	log := log.Logger(true, "session-manager-plugin")
+	s.Session.DataChannel.Close(log)
 }
 
 // StartSession redirects inputStream/outputStream data to datachannel.

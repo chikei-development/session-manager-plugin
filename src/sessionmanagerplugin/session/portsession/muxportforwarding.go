@@ -54,7 +54,7 @@ type MgsConn struct {
 // MuxPortForwarding is type of port session
 // accepts multiple client connections through multiplexing
 type MuxPortForwarding struct {
-	port           IPortSession
+	port           PortSession
 	sessionId      string
 	socketFile     string
 	portParameters PortParameters
@@ -87,6 +87,7 @@ func (p *MuxPortForwarding) Stop() {
 		p.muxClient.close()
 	}
 	p.cleanUp()
+	p.port.Stop()
 }
 
 // InitializeStreams initializes i/o streams
@@ -195,7 +196,6 @@ func (p *MuxPortForwarding) handleControlSignals(log log.T) {
 			log.Errorf("Failed to send TerminateSession flag: %v", err)
 		}
 		fmt.Fprintf(os.Stdout, "\n\nExiting session with sessionId: %s.\n\n", p.sessionId)
-		p.Stop()
 	}()
 }
 
