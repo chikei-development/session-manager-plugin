@@ -20,6 +20,7 @@ package shellsession
 import (
 	"bufio"
 	"bytes"
+	"github.com/aws/session-manager-plugin/src/sessionmanagerplugin/session"
 	"os"
 	"os/exec"
 	"time"
@@ -56,8 +57,8 @@ func (s *ShellSession) Stop(log log.T) {
 	setState(&s.originalSttyState)
 	setState(bytes.NewBufferString("echo")) // for linux and ubuntu
 
-	// need to clear the datachannel as Initialize() doesn't touch it
-	s.DataChannel = nil
+	// need to re-initialise the shell session
+	session.Register(&ShellSession{})
 }
 
 // handleKeyboardInput handles input entered by customer on terminal

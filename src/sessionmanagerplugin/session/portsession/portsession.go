@@ -112,8 +112,8 @@ func (s *PortSession) Stop(log log.T) {
 
 	s.Session.DataChannel.Close(log)
 
-	// need to clear the datachannel as Initialize() doesn't touch it
-	s.DataChannel = nil
+	// need re-register the PortHandler
+	session.Register(&PortSession{})
 }
 
 // StartSession redirects inputStream/outputStream data to datachannel.
