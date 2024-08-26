@@ -472,7 +472,7 @@ func TestHandshakeRequestHandler(t *testing.T) {
 			reflect.DeepEqual(handshakeResponse.ProcessedClientActions, expectedActions)
 	}
 	mockChannel.On("SendMessage", mock.Anything, mock.MatchedBy(handshakeResponseMatcher), mock.Anything).Return(nil)
-	dataChannel.OutputMessageHandler(mockLogger, func() {}, sessionId, handshakeRequestMessageBytes)
+	dataChannel.OutputMessageHandler(mockLogger, func(log log.T) {}, sessionId, handshakeRequestMessageBytes)
 	assert.Equal(t, mockEncrypter, dataChannel.encryption)
 }
 

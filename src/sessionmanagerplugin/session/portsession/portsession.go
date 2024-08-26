@@ -106,7 +106,14 @@ func (s *PortSession) Initialize(log log.T, sessionVar *session.Session) {
 }
 
 func (s *PortSession) Stop(log log.T) {
+	if s.Session.DataChannel == nil {
+		return
+	}
+
 	s.Session.DataChannel.Close(log)
+
+	// need to clear the datachannel as Initialize() doesn't touch it
+	s.DataChannel = nil
 }
 
 // StartSession redirects inputStream/outputStream data to datachannel.
