@@ -57,11 +57,11 @@ func (p *BasicPortForwarding) IsStreamNotSet() (status bool) {
 }
 
 // Stop closes the stream
-func (p *BasicPortForwarding) Stop() {
+func (p *BasicPortForwarding) Stop(log log.T) {
 	if p.stream != nil {
 		(*p.stream).Close()
 	}
-	p.port.Stop()
+	p.port.Stop(log)
 }
 
 // InitializeStreams establishes connection and initializes the stream
@@ -176,7 +176,7 @@ func (p *BasicPortForwarding) handleControlSignals(log log.T) {
 				log.Errorf("Failed to send TerminateSession flag: %v", err)
 			}
 			fmt.Fprintf(os.Stdout, "\n\nExiting session with sessionId: %s.\n\n", p.sessionId)
-			p.Stop()
+			p.Stop(log)
 		} else {
 			p.session.TerminateSession(log)
 		}

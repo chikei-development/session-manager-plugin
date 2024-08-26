@@ -38,7 +38,7 @@ type IPortSession interface {
 	InitializeStreams(log log.T, agentVersion string) (err error)
 	ReadStream(log log.T) (err error)
 	WriteStream(outputMessage message.ClientMessage) (err error)
-	Stop()
+	Stop(log log.T)
 }
 
 type PortParameters struct {
@@ -105,9 +105,7 @@ func (s *PortSession) Initialize(log log.T, sessionVar *session.Session) {
 	log.Infof("Connected to instance[%s] on port: %s", sessionVar.TargetId, s.portParameters.PortNumber)
 }
 
-func (s *PortSession) Stop() {
-	// 🤔
-	log := log.Logger(true, "session-manager-plugin")
+func (s *PortSession) Stop(log log.T) {
 	s.Session.DataChannel.Close(log)
 }
 

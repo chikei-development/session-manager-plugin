@@ -49,7 +49,7 @@ type ISessionPlugin interface {
 	SetSessionHandlers(log.T) error
 	ProcessStreamMessagePayload(log log.T, streamDataMessage message.ClientMessage) (isHandlerReady bool, err error)
 	Initialize(log log.T, sessionVar *Session)
-	Stop()
+	Stop(log log.T)
 	Name() string
 }
 
