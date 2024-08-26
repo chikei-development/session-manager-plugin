@@ -103,8 +103,8 @@ func (p *MuxPortForwarding) InitializeStreams(log log.T, agentVersion string) (e
 }
 
 // ReadStream reads data from different connections
-func (p *MuxPortForwarding) ReadStream(log log.T) (err error) {
-	g, ctx := errgroup.WithContext(context.Background())
+func (p *MuxPortForwarding) ReadStream(log log.T, ctx context.Context) (err error) {
+	g, ctx := errgroup.WithContext(ctx)
 
 	// reads data from smux client and transfers to server over datachannel
 	g.Go(func() error {

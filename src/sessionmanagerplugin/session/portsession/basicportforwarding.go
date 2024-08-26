@@ -15,6 +15,7 @@
 package portsession
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -74,7 +75,7 @@ func (p *BasicPortForwarding) InitializeStreams(log log.T, agentVersion string) 
 }
 
 // ReadStream reads data from the stream
-func (p *BasicPortForwarding) ReadStream(log log.T) (err error) {
+func (p *BasicPortForwarding) ReadStream(log log.T, ctx context.Context) (err error) {
 	msg := make([]byte, config.StreamDataPayloadSize)
 	for {
 		numBytes, err := (*p.stream).Read(msg)

@@ -15,6 +15,7 @@
 package portsession
 
 import (
+	"context"
 	"github.com/aws/session-manager-plugin/src/config"
 	"github.com/aws/session-manager-plugin/src/jsonutil"
 	"github.com/aws/session-manager-plugin/src/log"
@@ -36,7 +37,7 @@ type PortSession struct {
 type IPortSession interface {
 	IsStreamNotSet() (status bool)
 	InitializeStreams(log log.T, agentVersion string) (err error)
-	ReadStream(log log.T) (err error)
+	ReadStream(log log.T, ctx context.Context) (err error)
 	WriteStream(outputMessage message.ClientMessage) (err error)
 	Stop(log log.T)
 }
@@ -111,6 +112,7 @@ func (s *PortSession) Stop(log log.T) {
 	}
 
 	s.Session.DataChannel.Close(log)
+	s.Cancel()
 
 	// need re-register the PortHandler
 	session.Register(&PortSession{})
@@ -118,11 +120,14 @@ func (s *PortSession) Stop(log log.T) {
 
 // StartSession redirects inputStream/outputStream data to datachannel.
 func (s *PortSession) SetSessionHandlers(log log.T) (err error) {
+	ctx, cancel := context.WithCancel(context.Background())
+	s.Cancel = cancel
+
 	if err = s.portSessionType.InitializeStreams(log, s.DataChannel.GetAgentVersion()); err != nil {
 		return err
 	}
 
-	if err = s.portSessionType.ReadStream(log); err != nil {
+	if err = s.portSessionType.ReadStream(log, ctx); err != nil {
 		return err
 	}
 	return
