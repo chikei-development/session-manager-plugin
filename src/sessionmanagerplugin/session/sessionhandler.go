@@ -15,10 +15,6 @@
 package session
 
 import (
-	"fmt"
-	"math/rand"
-	"os"
-
 	sdkSession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/session-manager-plugin/src/config"
@@ -26,6 +22,7 @@ import (
 	"github.com/aws/session-manager-plugin/src/message"
 	"github.com/aws/session-manager-plugin/src/retry"
 	"github.com/aws/session-manager-plugin/src/sdkutil"
+	"math/rand"
 )
 
 // OpenDataChannel initializes datachannel
@@ -130,12 +127,10 @@ func (s *Session) GetResumeSessionParams(log log.T) (string, error) {
 func (s *Session) ResumeSessionHandler(log log.T) (err error) {
 	s.TokenValue, err = s.GetResumeSessionParams(log)
 	if err != nil {
-		log.Errorf("Failed to get token: %v", err)
+		_ = log.Errorf("Failed to get token: %v", err)
 		return
 	} else if s.TokenValue == "" {
-		log.Debugf("Session: %s timed out", s.SessionId)
-		fmt.Fprintf(os.Stdout, "Session: %s timed out.\n", s.SessionId)
-		os.Exit(0)
+		_ = log.Errorf("Session: %s timed out.\n", s.SessionId)
 	}
 	s.DataChannel.GetWsChannel().SetChannelToken(s.TokenValue)
 	err = s.DataChannel.Reconnect(log)
@@ -150,7 +145,7 @@ func (s *Session) TerminateSession(log log.T) error {
 	)
 
 	if newSession, err = sdkutil.GetNewSessionWithEndpoint(s.Endpoint); err != nil {
-		log.Errorf("Terminate Session failed: %v", err)
+		_ = log.Errorf("Terminate Session failed: %v", err)
 		return err
 	}
 	s.sdk = ssm.New(newSession)

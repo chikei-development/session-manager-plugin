@@ -23,7 +23,6 @@ import (
 	"io"
 	"net"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -80,6 +79,11 @@ func (p *MuxPortForwarding) IsStreamNotSet() (status bool) {
 
 // Stop closes all open stream
 func (p *MuxPortForwarding) Stop(log log.T) {
+	if err := p.session.DataChannel.SendFlag(log, message.TerminateSession); err != nil {
+		_ = log.Errorf("Failed to send TerminateSession flag: %v", err)
+	}
+	log.Infof("exiting session with sessionId: %s.\n\n", p.sessionId)
+
 	if p.mgsConn != nil {
 		p.mgsConn.close()
 	}
@@ -92,8 +96,6 @@ func (p *MuxPortForwarding) Stop(log log.T) {
 
 // InitializeStreams initializes i/o streams
 func (p *MuxPortForwarding) InitializeStreams(log log.T, agentVersion string) (err error) {
-
-	p.handleControlSignals(log)
 	p.socketFile = getUnixSocketPath(p.sessionId, os.TempDir(), "session_manager_plugin_mux.sock")
 
 	if err = p.initialize(log, agentVersion); err != nil {
@@ -184,21 +186,6 @@ func (p *MuxPortForwarding) initialize(log log.T, agentVersion string) (err erro
 	return g.Wait()
 }
 
-// handleControlSignals handles terminate signals
-func (p *MuxPortForwarding) handleControlSignals(log log.T) {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, sessionutil.ControlSignals...)
-	go func() {
-		<-c
-		fmt.Println("Terminate signal received, exiting.")
-
-		if err := p.session.DataChannel.SendFlag(log, message.TerminateSession); err != nil {
-			log.Errorf("Failed to send TerminateSession flag: %v", err)
-		}
-		fmt.Fprintf(os.Stdout, "\n\nExiting session with sessionId: %s.\n\n", p.sessionId)
-	}()
-}
-
 // transferDataToServer reads from smux client connection and sends on data channel
 func (p *MuxPortForwarding) transferDataToServer(log log.T, ctx context.Context) (err error) {
 	msg := make([]byte, config.StreamDataPayloadSize)
@@ -251,25 +238,18 @@ func (p *MuxPortForwarding) handleClientConnections(log log.T, ctx context.Conte
 	defer listener.Close()
 
 	log.Infof(displayMsg)
-	fmt.Printf(displayMsg)
-
 	log.Infof("Waiting for connections...\n")
-	fmt.Printf("\nWaiting for connections...\n")
 
-	var once sync.Once
 	for {
 		select {
 		case <-ctx.Done():
+			listener.Close()
 			return ctx.Err()
 		default:
 			if conn, err := listener.Accept(); err != nil {
 				log.Errorf("Error while accepting connection: %v", err)
 			} else {
 				log.Infof("Connection accepted from %s\n for session [%s]", conn.RemoteAddr(), p.sessionId)
-
-				once.Do(func() {
-					fmt.Printf("\nConnection accepted for session [%s]\n", p.sessionId)
-				})
 
 				stream, err := p.muxClient.session.OpenStream()
 				if err != nil {
