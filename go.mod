@@ -1,4 +1,4 @@
-module github.com/aws/session-manager-plugin
+module github.com/chikei-development/session-manager-plugin
 
 go 1.20
 

@@ -17,15 +17,15 @@ package portsession
 import (
 	"context"
 	"fmt"
-	"github.com/aws/session-manager-plugin/src/version"
+	"github.com/chikei-development/session-manager-plugin/src/version"
 	"net"
 	"strconv"
 	"time"
 
-	"github.com/aws/session-manager-plugin/src/config"
-	"github.com/aws/session-manager-plugin/src/log"
-	"github.com/aws/session-manager-plugin/src/message"
-	"github.com/aws/session-manager-plugin/src/sessionmanagerplugin/session"
+	"github.com/chikei-development/session-manager-plugin/src/config"
+	"github.com/chikei-development/session-manager-plugin/src/log"
+	"github.com/chikei-development/session-manager-plugin/src/message"
+	"github.com/chikei-development/session-manager-plugin/src/sessionmanagerplugin/session"
 )
 
 // BasicPortForwarding is type of port session

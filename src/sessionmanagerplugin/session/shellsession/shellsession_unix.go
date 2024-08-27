@@ -20,13 +20,13 @@ package shellsession
 import (
 	"bufio"
 	"bytes"
-	"github.com/aws/session-manager-plugin/src/sessionmanagerplugin/session"
+	"github.com/chikei-development/session-manager-plugin/src/sessionmanagerplugin/session"
 	"os"
 	"os/exec"
 	"time"
 
-	"github.com/aws/session-manager-plugin/src/log"
-	"github.com/aws/session-manager-plugin/src/message"
+	"github.com/chikei-development/session-manager-plugin/src/log"
+	"github.com/chikei-development/session-manager-plugin/src/message"
 )
 
 // disableEchoAndInputBuffering disables echo to avoid double echo and disable input buffering
