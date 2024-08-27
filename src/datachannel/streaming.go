@@ -202,7 +202,7 @@ func (dataChannel *DataChannel) FinalizeDataChannelHandshake(log log.T, tokenVal
 	uuid.SwitchFormat(uuid.CleanHyphen)
 	uid := uuid.NewV4().String()
 
-	log.Infof("Sending token through data channel %s to acknowledge connection", dataChannel.wsChannel.GetStreamUrl())
+	log.Infof("sending token through data channel %s to acknowledge connection", dataChannel.wsChannel.GetStreamUrl())
 	openDataChannelInput := service.OpenDataChannelInput{
 		MessageSchemaVersion: aws.String(config.MessageSchemaVersion),
 		RequestId:            aws.String(uid),
@@ -506,7 +506,7 @@ func (dataChannel *DataChannel) handleHandshakeComplete(log log.T, clientMessage
 		dataChannel.isSessionTypeSet <- false
 	}
 
-	log.Debugf("Handshake Complete. Handshake time to complete is: %s seconds",
+	log.Debugf("handshake complete. handshake time to complete is: %d seconds",
 		handshakeComplete.HandshakeTimeToComplete.Seconds())
 
 	if handshakeComplete.CustomerMessage != "" {
@@ -621,9 +621,9 @@ func (dataChannel *DataChannel) HandleOutputMessage(
 				}
 
 				// PayloadType is HandshakeRequest so we call our own handler instead of the provided handler
-				log.Debugf("Processing HandshakeRequest message %s", outputMessage)
+				log.Debugf("processing HandshakeRequest message %v", outputMessage)
 				if err = dataChannel.handleHandshakeRequest(log, outputMessage); err != nil {
-					log.Errorf("Unable to process incoming data payload, MessageType %s, "+
+					log.Errorf("unable to process incoming data payload, MessageType %s, "+
 						"PayloadType HandshakeRequestPayloadType, err: %s.", outputMessage.MessageType, err)
 					return err
 				}
@@ -635,7 +635,7 @@ func (dataChannel *DataChannel) HandleOutputMessage(
 				}
 
 				if err = dataChannel.handleHandshakeComplete(log, outputMessage); err != nil {
-					log.Errorf("Unable to process incoming data payload, MessageType %s, "+
+					log.Errorf("unable to process incoming data payload, MessageType %s, "+
 						"PayloadType HandshakeCompletePayloadType, err: %s.", outputMessage.MessageType, err)
 					return err
 				}

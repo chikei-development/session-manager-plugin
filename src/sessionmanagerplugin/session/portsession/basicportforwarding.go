@@ -87,12 +87,12 @@ func (p *BasicPortForwarding) ReadStream(log log.T, ctx context.Context) (err er
 	for {
 		numBytes, err := (*p.stream).Read(msg)
 		if err != nil {
-			log.Debugf("Reading from port %s failed with error: %v. Close this connection, listen and accept new one.",
+			log.Debugf("reading from port %s failed with error: %v. close this connection, listen and accept new one.",
 				p.portParameters.PortNumber, err)
 
 			// Send DisconnectToPort flag to agent when client tcp connection drops to ensure agent closes tcp connection too with server port
 			if err = p.session.DataChannel.SendFlag(log, message.DisconnectToPort); err != nil {
-				log.Errorf("Failed to send packet: %v", err)
+				_ = log.Errorf("failed to send packet: %v", err)
 				return err
 			}
 
@@ -104,9 +104,9 @@ func (p *BasicPortForwarding) ReadStream(log log.T, ctx context.Context) (err er
 			continue
 		}
 
-		log.Tracef("Received message of size %d from stdin.", numBytes)
+		log.Tracef("received message of size %d from stdin.", numBytes)
 		if err = p.session.DataChannel.SendInputDataMessage(log, message.Output, msg[:numBytes]); err != nil {
-			log.Errorf("Failed to send packet: %v", err)
+			log.Errorf("failed to send packet: %v", err)
 			return err
 		}
 		// Sleep to process more data
@@ -162,7 +162,7 @@ func (p *BasicPortForwarding) startLocalListener(log log.T, portNumber string) (
 		}
 		// get port number the TCP listener opened
 		p.portParameters.LocalPortNumber = strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)
-		displayMessage = fmt.Sprintf("Port %s opened for sessionId %s.", p.portParameters.LocalPortNumber, p.sessionId)
+		displayMessage = fmt.Sprintf("port %s opened for sessionId %s.", p.portParameters.LocalPortNumber, p.sessionId)
 	}
 
 	log.Info(displayMessage)

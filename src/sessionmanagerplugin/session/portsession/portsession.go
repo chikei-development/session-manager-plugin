@@ -103,7 +103,7 @@ func (s *PortSession) Initialize(log log.T, sessionVar *session.Session) {
 		}
 		s.DataChannel.OutputMessageHandler(log, s.Stop, s.SessionId, input)
 	})
-	log.Infof("Connected to instance[%s] on port: %s", sessionVar.TargetId, s.portParameters.PortNumber)
+	log.Infof("connected to instance[%s] on port: %s", sessionVar.TargetId, s.portParameters.PortNumber)
 }
 
 func (s *PortSession) Stop(log log.T) {
@@ -113,6 +113,8 @@ func (s *PortSession) Stop(log log.T) {
 
 	s.Session.DataChannel.Close(log)
 	s.Cancel()
+
+	s.portSessionType.Stop(log)
 
 	// need re-register the PortHandler
 	session.Register(&PortSession{})

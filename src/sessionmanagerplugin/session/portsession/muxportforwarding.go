@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"io"
@@ -60,6 +61,7 @@ type MuxPortForwarding struct {
 	session        session.Session
 	muxClient      *MuxClient
 	mgsConn        *MgsConn
+	clientListener net.Listener
 }
 
 func (c *MgsConn) close() {
@@ -79,19 +81,9 @@ func (p *MuxPortForwarding) IsStreamNotSet() (status bool) {
 
 // Stop closes all open stream
 func (p *MuxPortForwarding) Stop(log log.T) {
-	if err := p.session.DataChannel.SendFlag(log, message.TerminateSession); err != nil {
-		_ = log.Errorf("Failed to send TerminateSession flag: %v", err)
+	if p.clientListener != nil {
+		p.clientListener.Close()
 	}
-	log.Infof("exiting session with sessionId: %s.\n\n", p.sessionId)
-
-	if p.mgsConn != nil {
-		p.mgsConn.close()
-	}
-	if p.muxClient != nil {
-		p.muxClient.close()
-	}
-	p.cleanUp()
-	p.port.Stop(log)
 }
 
 // InitializeStreams initializes i/o streams
@@ -232,13 +224,14 @@ func (p *MuxPortForwarding) handleClientConnections(log log.T, ctx context.Conte
 			return err
 		}
 		p.portParameters.LocalPortNumber = strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)
-		displayMsg = fmt.Sprintf("Port %s opened for sessionId %s.", p.portParameters.LocalPortNumber, p.sessionId)
+		displayMsg = fmt.Sprintf("port %s opened for sessionId %s.", p.portParameters.LocalPortNumber, p.sessionId)
 	}
 
+	p.clientListener = listener
 	defer listener.Close()
 
 	log.Infof(displayMsg)
-	log.Infof("Waiting for connections...\n")
+	log.Infof("waiting for connections...")
 
 	for {
 		select {
@@ -246,16 +239,18 @@ func (p *MuxPortForwarding) handleClientConnections(log log.T, ctx context.Conte
 			listener.Close()
 			return ctx.Err()
 		default:
-			if conn, err := listener.Accept(); err != nil {
-				log.Errorf("Error while accepting connection: %v", err)
+			if conn, err := listener.Accept(); errors.Is(err, net.ErrClosed) {
+				return nil
+			} else if err != nil {
+				log.Errorf("error while accepting connection: %v", err)
 			} else {
-				log.Infof("Connection accepted from %s\n for session [%s]", conn.RemoteAddr(), p.sessionId)
+				log.Infof("connection accepted from %s\n for session [%s]", conn.RemoteAddr(), p.sessionId)
 
 				stream, err := p.muxClient.session.OpenStream()
 				if err != nil {
 					continue
 				}
-				log.Debugf("Client stream opened %d\n", stream.ID())
+				log.Debugf("client stream opened %d", stream.ID())
 				go handleDataTransfer(stream, conn)
 			}
 		}

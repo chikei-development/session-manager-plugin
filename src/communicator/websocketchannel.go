@@ -16,6 +16,7 @@ package communicator
 
 import (
 	"errors"
+	"net"
 	"sync"
 	"time"
 
@@ -91,12 +92,12 @@ func (webSocketChannel *WebSocketChannel) StartPings(log log.T, pingInterval tim
 				return
 			}
 
-			log.Debug("WebsocketChannel: Send ping. Message.")
+			log.Debug("websocketChannel: send ping message.")
 			webSocketChannel.writeLock.Lock()
 			err := webSocketChannel.Connection.WriteMessage(websocket.PingMessage, []byte("keepalive"))
 			webSocketChannel.writeLock.Unlock()
 			if err != nil {
-				log.Errorf("Error while sending websocket ping: %v", err)
+				log.Errorf("error while sending websocket ping: %v", err)
 				return
 			}
 			time.Sleep(pingInterval)
@@ -124,14 +125,14 @@ func (webSocketChannel *WebSocketChannel) SendMessage(log log.T, input []byte, i
 // Close closes the corresponding connection.
 func (webSocketChannel *WebSocketChannel) Close(log log.T) error {
 
-	log.Info("Closing websocket channel connection to: " + webSocketChannel.Url)
+	log.Info("closing websocket channel connection to: " + webSocketChannel.Url)
 	if webSocketChannel.IsOpen == true {
 		// Send signal to stop receiving message
 		webSocketChannel.IsOpen = false
 		return websocketutil.NewWebsocketUtil(log, nil).CloseConnection(webSocketChannel.Connection)
 	}
 
-	log.Info("Websocket channel connection to: " + webSocketChannel.Url + " is already Closed!")
+	log.Info("websocket channel connection to: " + webSocketChannel.Url + " is already closed!")
 	return nil
 }
 
@@ -165,14 +166,16 @@ func (webSocketChannel *WebSocketChannel) Open(log log.T) error {
 			}
 
 			messageType, rawMessage, err := webSocketChannel.Connection.ReadMessage()
-			if err != nil {
+			if errors.Is(err, net.ErrClosed) {
+				break
+			} else if err != nil {
 				retryCount++
 				if retryCount >= config.RetryAttempt {
 					log.Errorf("Reach the retry limit %v for receive messages.", config.RetryAttempt)
 					webSocketChannel.OnError(err)
 					break
 				}
-				log.Debugf("An error happened when receiving the message. Retried times: %v, Error: %v, Messagetype: %v",
+				log.Debugf("an error happened when receiving the message. retried times: %v, Error: %v, Messagetype: %v",
 					retryCount,
 					err.Error(),
 					messageType)

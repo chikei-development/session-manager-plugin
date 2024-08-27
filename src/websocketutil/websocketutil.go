@@ -56,7 +56,7 @@ func NewWebsocketUtil(logger log.T, dialerInput *websocket.Dialer) *WebsocketUti
 // OpenConnection opens a websocket connection provided an input url.
 func (u *WebsocketUtil) OpenConnection(url string) (*websocket.Conn, error) {
 
-	u.log.Infof("Opening websocket connection to: ", url)
+	u.log.Infof("opening websocket connection to: %s", url)
 
 	conn, _, err := u.dialer.Dial(url, nil)
 	if err != nil {
@@ -64,7 +64,7 @@ func (u *WebsocketUtil) OpenConnection(url string) (*websocket.Conn, error) {
 		return nil, err
 	}
 
-	u.log.Infof("Successfully opened websocket connection to: ", url)
+	u.log.Infof("successfully opened websocket connection to: %s", url)
 
 	return conn, err
 }
@@ -76,15 +76,15 @@ func (u *WebsocketUtil) CloseConnection(ws *websocket.Conn) error {
 		return errors.New("websocket conn object is nil")
 	}
 
-	u.log.Debugf("Closing websocket connection to:", ws.RemoteAddr().String())
+	u.log.Debugf("closing websocket connection to: %s", ws.RemoteAddr().String())
 
 	err := ws.Close()
 	if err != nil {
-		u.log.Errorf("Failed to close websocket: %s", err.Error())
+		u.log.Errorf("failed to close websocket: %s", err.Error())
 		return err
 	}
 
-	u.log.Debugf("Successfully closed websocket connection to:", ws.RemoteAddr().String())
+	u.log.Debugf("successfully closed websocket connection to: %s", ws.RemoteAddr().String())
 
 	return nil
 }
