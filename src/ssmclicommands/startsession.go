@@ -31,7 +31,7 @@ import (
 	_ "github.com/chikei-development/session-manager-plugin/src/sessionmanagerplugin/session/portsession"
 	_ "github.com/chikei-development/session-manager-plugin/src/sessionmanagerplugin/session/shellsession"
 	"github.com/chikei-development/session-manager-plugin/src/ssmclicommands/utils"
-	"github.com/twinj/uuid"
+	"github.com/google/uuid"
 )
 
 const (
@@ -182,7 +182,7 @@ func (s *StartSessionCommand) Execute(parameters map[string][]string) (error, st
 		return err, "StartSession failed"
 	}
 	log.Infof("For SessionId: %s, StartSession returned streamUrl: %s", sessionId, streamUrl)
-	clientId := uuid.NewV4().String()
+	clientId := uuid.New().String()
 
 	session := session.Session{
 		SessionId:   sessionId,
@@ -234,9 +234,8 @@ func contains(arr []string, item string) bool {
 
 // function to get start-session parameters
 func (s *StartSessionCommand) getStartSessionParams(log log.T, parameters map[string][]string) (string, string, string, error) {
-	//Fetch command token
-	uuid.SwitchFormat(uuid.CleanHyphen)
 
+	//Fetch command token
 	startSessionInput := ssm.StartSessionInput{
 		Target: &parameters[INSTANCE_ID][0],
 	}
@@ -249,7 +248,7 @@ func (s *StartSessionCommand) getStartSessionParams(log log.T, parameters map[st
 	delete(parameters, DOCUMENT_NAME)
 	delete(parameters, REGION)
 
-	if parameters["parameters"] != nil && len(parameters["parameters"]) == 1 {
+	if len(parameters["parameters"]) == 1 {
 
 		userParameters := make(map[string][]*string)
 		params := make(map[string][]string)

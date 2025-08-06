@@ -34,7 +34,7 @@ import (
 	"github.com/chikei-development/session-manager-plugin/src/sdkutil"
 	"github.com/chikei-development/session-manager-plugin/src/sessionmanagerplugin/session/sessionutil"
 	"github.com/chikei-development/session-manager-plugin/src/version"
-	"github.com/twinj/uuid"
+	"github.com/google/uuid"
 )
 
 const (
@@ -84,7 +84,7 @@ type Session struct {
 	sdk                   *ssm.SSM
 	retryParams           retry.RepeatableExponentialRetryer
 	SessionType           string
-	SessionProperties     interface{}
+	SessionProperties     any
 	DisplayMode           sessionutil.DisplayMode
 	Cancel                context.CancelFunc
 }
@@ -142,7 +142,6 @@ func ValidateInputAndStartSession(args []string, out io.Writer) {
 		target             string
 	)
 	log := log.Logger(true, "session-manager-plugin")
-	uuid.SwitchFormat(uuid.CleanHyphen)
 
 	if len(args) == 1 {
 		fmt.Fprint(out, "\nThe Session Manager plugin was installed successfully. "+
@@ -181,7 +180,7 @@ func ValidateInputAndStartSession(args []string, out io.Writer) {
 			profile = args[4]
 		case 5:
 			// args[5] is parameters input to aws cli for StartSession api call
-			startSessionRequest := make(map[string]interface{})
+			startSessionRequest := make(map[string]any)
 			json.Unmarshal([]byte(args[5]), &startSessionRequest)
 			target = startSessionRequest["Target"].(string)
 		case 6:
@@ -189,7 +188,7 @@ func ValidateInputAndStartSession(args []string, out io.Writer) {
 		}
 	}
 	sdkutil.SetRegionAndProfile(region, profile)
-	clientId := uuid.NewV4().String()
+	clientId := uuid.New().String()
 
 	switch operationName {
 	case StartSessionOperation:

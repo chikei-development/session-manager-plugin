@@ -36,8 +36,8 @@ import (
 	"github.com/chikei-development/session-manager-plugin/src/message"
 	"github.com/chikei-development/session-manager-plugin/src/service"
 	"github.com/chikei-development/session-manager-plugin/src/version"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/twinj/uuid"
 )
 
 type IDataChannel interface {
@@ -65,7 +65,7 @@ type IDataChannel interface {
 	IsStreamMessageResendTimeout() chan bool
 	GetSessionType() string
 	SetSessionType(sessionType string)
-	GetSessionProperties() interface{}
+	GetSessionProperties() any
 	GetWsChannel() communicator.IWebSocketChannel
 	SetWsChannel(wsChannel communicator.IWebSocketChannel)
 	GetStreamDataSequenceNumber() int64
@@ -104,7 +104,7 @@ type DataChannel struct {
 	// SessionType
 	sessionType       string
 	isSessionTypeSet  chan bool
-	sessionProperties interface{}
+	sessionProperties any
 
 	// Used to detect if resending a streaming message reaches timeout
 	isStreamMessageResendTimeout chan bool
@@ -199,8 +199,7 @@ func (dataChannel *DataChannel) SetWebsocket(log log.T, channelUrl string, chann
 
 // FinalizeHandshake sends the token for service to acknowledge the connection.
 func (dataChannel *DataChannel) FinalizeDataChannelHandshake(log log.T, tokenValue string) (err error) {
-	uuid.SwitchFormat(uuid.CleanHyphen)
-	uid := uuid.NewV4().String()
+	uid := uuid.New().String()
 
 	log.Infof("sending token through data channel %s to acknowledge connection", dataChannel.wsChannel.GetStreamUrl())
 	openDataChannelInput := service.OpenDataChannelInput{
@@ -278,7 +277,7 @@ func (dataChannel *DataChannel) SendInputDataMessage(
 		msg  []byte
 	)
 
-	messageId := uuid.NewV4()
+	messageId := uuid.New()
 
 	// today 'enter' is taken as 'next line' in winpty shell. so hardcoding 'next line' byte to actual 'enter' byte
 	if bytes.Equal(inputData, []byte{10}) {
@@ -881,7 +880,7 @@ func (dataChannel *DataChannel) ProcessSessionTypeHandshakeAction(actionParams j
 		dataChannel.sessionProperties = sessTypeReq.Properties
 		return nil
 	default:
-		return errors.New(fmt.Sprintf("Unknown session type %s", sessTypeReq.SessionType))
+		return fmt.Errorf("unknown session type %s", sessTypeReq.SessionType)
 	}
 }
 
@@ -907,7 +906,7 @@ func (dataChannel *DataChannel) GetSessionType() string {
 }
 
 // GetSessionProperties returns SessionProperties of the dataChannel
-func (dataChannel *DataChannel) GetSessionProperties() interface{} {
+func (dataChannel *DataChannel) GetSessionProperties() any {
 	return dataChannel.sessionProperties
 }
 
