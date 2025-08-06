@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/chikei-development/session-manager-plugin/src/log"
-	"github.com/twinj/uuid"
+	"github.com/google/uuid"
 )
 
 // DeserializeClientMessage deserializes the byte array into an ClientMessage message.
@@ -167,36 +167,42 @@ func getUuid(log log.T, byteArray []byte, offset int) (result uuid.UUID, err err
 	byteArrayLength := len(byteArray)
 	if offset > byteArrayLength-1 || offset+16-1 > byteArrayLength-1 || offset < 0 {
 		log.Error("getUuid failed: Offset is invalid.")
-		return nil, errors.New("Offset is outside the byte array.")
+		return uuid.Nil, errors.New("Offset is outside the byte array.")
 	}
 
 	leastSignificantLong, err := getLong(log, byteArray, offset)
 	if err != nil {
 		log.Error("getUuid failed: failed to get uuid LSBs Long value.")
-		return nil, errors.New("Failed to get uuid LSBs long value.")
+		return uuid.Nil, errors.New("Failed to get uuid LSBs long value.")
 	}
 
 	leastSignificantBytes, err := longToBytes(log, leastSignificantLong)
 	if err != nil {
 		log.Error("getUuid failed: failed to get uuid LSBs bytes value.")
-		return nil, errors.New("Failed to get uuid LSBs bytes value.")
+		return uuid.Nil, errors.New("Failed to get uuid LSBs bytes value.")
 	}
 
 	mostSignificantLong, err := getLong(log, byteArray, offset+8)
 	if err != nil {
 		log.Error("getUuid failed: failed to get uuid MSBs Long value.")
-		return nil, errors.New("Failed to get uuid MSBs long value.")
+		return uuid.Nil, errors.New("Failed to get uuid MSBs long value.")
 	}
 
 	mostSignificantBytes, err := longToBytes(log, mostSignificantLong)
 	if err != nil {
 		log.Error("getUuid failed: failed to get uuid MSBs bytes value.")
-		return nil, errors.New("Failed to get uuid MSBs bytes value.")
+		return uuid.Nil, errors.New("Failed to get uuid MSBs bytes value.")
 	}
 
 	uuidBytes := append(mostSignificantBytes, leastSignificantBytes...)
 
-	return uuid.New(uuidBytes), nil
+	result, err = uuid.FromBytes(uuidBytes)
+	if err != nil {
+		log.Error("getUuid failed: Failed to convert bytes to uuid.")
+		return uuid.Nil, errors.New("Failed to convert bytes to uuid.")
+	}
+
+	return result, nil
 }
 
 // longToBytes gets bytes array from a long integer.
@@ -414,7 +420,7 @@ func putBytes(log log.T, byteArray []byte, offsetStart int, offsetEnd int, input
 
 // putUuid puts the 128 bit uuid to an array of bytes starting from the offset.
 func putUuid(log log.T, byteArray []byte, offset int, input uuid.UUID) (err error) {
-	if input == nil {
+	if input == uuid.Nil {
 		log.Error("putUuid failed: input is null.")
 		return errors.New("putUuid failed: input is null.")
 	}
@@ -425,13 +431,13 @@ func putUuid(log log.T, byteArray []byte, offset int, input uuid.UUID) (err erro
 		return errors.New("Offset is outside the byte array.")
 	}
 
-	leastSignificantLong, err := bytesToLong(log, input.Bytes()[8:16])
+	leastSignificantLong, err := bytesToLong(log, input[8:16])
 	if err != nil {
 		log.Error("putUuid failed: Failed to get leastSignificant Long value.")
 		return errors.New("Failed to get leastSignificant Long value.")
 	}
 
-	mostSignificantLong, err := bytesToLong(log, input.Bytes()[0:8])
+	mostSignificantLong, err := bytesToLong(log, input[0:8])
 	if err != nil {
 		log.Error("putUuid failed: Failed to get mostSignificantLong Long value.")
 		return errors.New("Failed to get mostSignificantLong Long value.")
@@ -476,7 +482,7 @@ func putULong(log log.T, byteArray []byte, offset int, value uint64) (err error)
 }
 
 // SerializeClientMessagePayload marshals payloads for all session specific messages into bytes.
-func SerializeClientMessagePayload(log log.T, obj interface{}) (reply []byte, err error) {
+func SerializeClientMessagePayload(log log.T, obj any) (reply []byte, err error) {
 	reply, err = json.Marshal(obj)
 	if err != nil {
 		log.Errorf("Could not serialize message with err: %s", err)
@@ -494,8 +500,7 @@ func SerializeClientMessageWithAcknowledgeContent(log log.T, acknowledgeContent 
 		return
 	}
 
-	uuid.SwitchFormat(uuid.CleanHyphen)
-	messageId := uuid.NewV4()
+	messageId := uuid.New()
 	clientMessage := ClientMessage{
 		MessageType:    AcknowledgeMessage,
 		SchemaVersion:  1,

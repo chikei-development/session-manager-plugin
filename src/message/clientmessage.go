@@ -16,7 +16,7 @@ package message
 
 import (
 	"github.com/chikei-development/session-manager-plugin/src/log"
-	"github.com/twinj/uuid"
+	"github.com/google/uuid"
 )
 
 const (

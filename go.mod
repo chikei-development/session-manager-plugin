@@ -7,9 +7,9 @@ require (
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/fsnotify/fsnotify v1.7.0
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/stretchr/testify v1.9.0
-	github.com/twinj/uuid v0.0.0-20151029044442-89173bcdda19
 	github.com/xtaci/smux v1.5.24
 	golang.org/x/crypto v0.23.0
 	golang.org/x/sync v0.7.0
